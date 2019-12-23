@@ -1,0 +1,167 @@
+Constant Story "SEVENTH SON";
+
+! base each stage of escaping the bunker on Maslow's hierarcy
+
+Constant Headline "^A Moderately Underground Adventure.^Copyleft (c) J. Horne, 2017-19^";
+
+Release 0;
+
+Constant MAX_SCORE = 15;
+Constant OBJECT_SCORE = 2;
+Constant ROOM_SCORE = 5;
+
+Include "Parser";
+Include "Verblib";
+Include "Grammar";
+
+Attribute legible;
+
+!Global test_var = 6;
+
+[ Initialise;
+	location = boilerRoom;
+	"^These are dark times, cold and dangerous. Most have left, many have burrowed down. There certainly isn't much left, except down here.^^";
+!	Box();
+];
+
+![ Box;
+!	 box "test" "test";
+!]; 
+
+! classes
+
+Class Room
+	has light scored;
+
+Class Furniture
+	with before [;
+		Take, Pull, Push, Pushdir:
+			print_ret (The) self, " is bolted in place.";
+	],
+	has static supporter;
+
+!Class Door_
+!	 with description "The door looks much like all the others in this place: metal, painted a placid grey-green.",
+!	 when_closed "The door is closed.",
+!	 when_open "The door is wide open.",
+!	 has static door openable lockable;
+
+! rooms
+
+Room boilerRoom "Boiler Room"
+	with description "This room houses a rather small boiler, like that found in a home.",
+	e_to boilerDoor,
+	has ~scored;
+
+Object -> boilerRmKey "bronze key"
+	with name 'bronze' 'key';
+	
+Object boilerDoor "boiler room door"
+	with name 'door',
+	with_key boilerRmKey,
+	description "The door looks much like all the others in this place: metal, painted a placid grey-green.",
+	before [;
+		Examine, Read:
+			if (player in boilerRoom) { "There is nothing to read on the door."; }
+			"Written on the door are the words ~BOILER ROOM~. Not surprising.";
+	],	
+	when_open [; 
+		if (player in boilerRoom) { "There is a door here that is open and leads to the east."; }
+		"The door west to the boiler room is open.";
+	],
+	when_closed "There is a door here that is closed.",
+	found_in boilerRoom tableRoom,
+	door_to [;
+		if (player in boilerRoom) { return tableRoom; }
+		return boilerRoom;
+	],
+	door_dir [;
+		if (player in boilerRoom) { return e_to; }
+		return w_to;
+	],
+	has static door openable locked lockable legible;
+
+Room tableRoom "Table Room"
+	with description "This room was probably used for recreation, or relaxation, at first glance.^^There is a room with several bunks to the south, and another room to the east.",
+	w_to boilerDoor,
+	s_to servantBunks,
+	e_to kitchen;
+
+Room servantBunks "Servant Dorm"
+	with description "The workers and the chefs probably lived here, but it's quite empty now.",
+	n_to tableRoom;
+	
+Room kitchen "Kitchen"
+	with description "Contains all of the amenities for prepping food. Maybe. The kitchen is dingy and most of the fixtures are caked in grease.",
+	w_to tableRoom;
+
+! objects
+! future reference: objects grouped with parents for better families
+
+! really the entire layout is kinda fucked
+! would much rather make each object a child of one of the rooms, but I feel like that'd have fucky effects
+
+Object table "sturdy poker table" tableRoom
+	with name 'table' 'poker',
+	description "A table used for gambling, recreation, and general sitting-around purposes.",
+	has static supporter;
+
+Object -> cards "pack of playing cards"
+	with name 'cards' 'pack' 'playing' 'pack-of',
+	description "52 individual playing cards, one rule card, and two jokers.",
+	found_in tableRoom;
+
+Object -> note "small note"
+	with name 'small' 'note',
+	description "A piece of paper with several words quickly scrawled on it.",
+	before [;
+		Examine, Read:
+			if (self in player) { "~remember replace faulty coil in boiler : req new coils today~"; }
+			"You need to pick it up.";
+	],
+	found_in tableRoom,
+	has legible;
+
+Object syringe "syringe of green fluid" tableRoom
+	with name 'syringe' 'fluid' 'needle',
+	description "A medical syringe filled with a viscous, slimy fluid. If you needed any more reason to be careful around it, it glows slightly.",
+	before [;
+		Use:
+			print "You stab ", (the) second, ".^^" ;
+	];
+
+Furniture boiler "hefty water boiler" boilerRoom
+	with name 'boiler' 'water',
+	before [;
+		Examine:
+			print "Hot to the touch.^";
+	],
+	description "A greyish water boiler, connected by several pipes leading into the wall.";
+	
+Furniture bunk "bunk bed" servantBunks
+	with name 'bunk' 'bed' 'berth',
+	before [;
+		Examine:
+			print "There are several holes torn into the canvas.^";
+	],
+	description "A bunk made of canvas and suspended by iron rods jutting out from the wall.",
+	has enterable;
+
+[ ReadSub;
+	!print_ret (The) noun, " is legible.";
+];
+
+[ UseSub;
+	if (second == player && noun == syringe) { 
+		print "You inject the contents of the syringe into your forearm, and immediately feel a stab of pain. You feel your vision going blank, and you fall. Darkness has come.";
+		deadflag = true;
+	} else {
+		print "Nothing happens.^";
+	}
+	if (AfterRoutines()) { return; }
+];
+
+Verb 'use' * held 'on'/'to' noun -> Use;
+Verb 'inject' = 'use';
+
+Extend 'read' replace * legible -> Read;

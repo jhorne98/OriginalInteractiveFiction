@@ -1,0 +1,108 @@
+Constant Story "SHIT MAZE";
+
+Constant Headline "^Daemon test and attempt to make a more confusing maze than ADVENT.^";
+
+Release 0;
+
+Include "Parser";
+Include "Verblib";
+Include "Grammar";
+
+[Initialise;
+	location = Maze1;
+];
+
+Class MazeRoom
+	with	short_name "Maze",
+			description "You're in a shitty maze in a shitty demo.",
+			out_to "Naw.";
+
+MazeRoom Maze1
+	with	description "There is a large hole in the ceiling that leads to the outside world. Did you fall in?",
+			n_to Maze1,
+			s_to Maze1,
+			e_to Maze2,
+			w_to Maze5,
+			before [;
+				Go:
+					if (Torch in self && Torch notin player) {
+						"It's very dark in the maze.";
+					}
+					if (Torch.power == 0) {
+						deadflag = 3;
+						"^You can't get out and you can't really explore the maze. You can't really do anything.";
+					}
+			],
+	has		light;
+
+Object -> Torch "torch"
+	with	name "torch" "flashlight" "light",
+			when_on "There is an electric torch here providing light.",
+			when_off "There is a torch here that is off.",
+			daemon [ t;
+				if (self hasnt on) {
+					StopDaemon(self);
+					rtrue;
+				}
+				t = --(self.power);
+				if (t == 0) give self ~on ~light;
+				if (self in player || self in location) {
+					if (t == 0) {
+						print "Your torch has gone out.";
+						if (location hasnt light) {
+							deadflag = 3;
+							"^You can't find your way out of a whack-ass maze without a torch!";
+						}
+
+						rtrue;
+					}
+				}
+			],
+			before [;
+				SwitchOn:
+					if (self.power <= 0) {
+						"Your flashlight is out of juice.";
+					}
+			],
+			after [;
+				SwitchOn:
+					give self light;
+					StartDaemon(self);
+				SwitchOff:
+					give self ~light;
+			],
+			power 5,
+	has		switchable;
+
+MazeRoom Maze2
+	with	n_to Maze3,
+			s_to Maze5,
+			e_to Maze5,
+			w_to Maze4;
+
+MazeRoom Maze3
+	with	n_to Maze3,
+			s_to Maze6,
+			e_to Maze3,
+			w_to Maze1;
+
+MazeRoom Maze4
+	with	s_to Maze5;
+
+MazeRoom Maze5
+	with	n_to Maze1,
+			s_to Maze6,
+			e_to Maze3,
+			w_to Maze4;
+
+MazeRoom Maze6
+	with	n_to Maze2,
+			s_to Maze8,
+			e_to Maze6;
+
+MazeRoom Maze7
+	with	e_to Maze8;
+
+MazeRoom Maze8
+	with	s_to Maze6,
+			e_to Maze7;

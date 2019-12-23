@@ -1,0 +1,5 @@
+! test program for inform 6
+[ Main a;
+    a = 2;
+	print a, " Hello, World!^";
+];

@@ -1,0 +1,56 @@
+! -
+! ARENA
+! template for testing objects and properties
+! -
+
+Constant Story "TEST ARENA";
+
+Constant Headline "^Object, Verb Testing^";
+
+Release 0;
+
+Constant MAX_SCORE = 10;
+
+Include "Parser";
+Include "Verblib";
+Include "Grammar";
+
+[ Initialise;
+	location = stage;
+];
+
+Class Room
+    has light scored;
+	
+! main "stage" for testing objects
+Room stage "Testing Stage"
+	with description "An infinitely large, lit room.",
+	n_to darkroom,
+	cant_go "The whole thing is one series of hallways that goes north.";
+
+! unlit "stage"
+Room darkRoom "Darkroom"
+	with description "An infinitely large, unlit room",
+	n_to stage,
+	cant_go "The whole thing is one series of hallways that goes north.",
+	has ~light;
+
+! flashlight: object with switchable; gives off light
+Object flashlight "flashlight" stage
+	with name 'light' 'flash' 'flashlight',
+	with description "A hand-held flashlight.",
+	after [;
+		SwitchOn: give self light;
+		SwitchOff: give self ~light;
+	],
+	has switchable;
+
+Object bag "burlap sack" darkRoom
+	with name 'sack' 'bag',
+	with description "A rought hewn burlap sack.",
+	each_turn [;
+		if (flashlight in bag) { deadflag = 2; }
+	],
+	has container openable open;
+
+Verb 'place' = 'put';
