@@ -15,7 +15,7 @@ Frotz (interpreter): https://davidgriffith.gitlab.io/frotz/
 
 Inform 6 is deprecated. If you'd like to learn to make interactive fiction with the newest version of Inform, use Inform 7: http://inform7.com/
 
-I don't like I7 very much. I find it clunky and too verbose to be a good pprogramming language.
+I don't like I7 very much. I find it clunky and too verbose to be a good programming language.
 
 ## Seventh Son (7thson.inf)
 A survival game set in a lonely bunker.
